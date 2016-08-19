@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package co.edu.intecap.directorio.negocio;
+package co.edu.intecap.directorio.negocio.gui;
 
+import co.edu.intecap.directorio.negocio.hilos.HiloContacto;
+import co.edu.intecap.directorio.negocio.hilos.HiloTipoContacto;
 import co.edu.intecap.directorio.persistencia.conexion.ConexionBD;
 import co.edu.intecap.directorio.persistencia.dao.ContactoDAO;
 import co.edu.intecap.directorio.persistencia.dao.TipocontactoDao;
@@ -23,6 +25,7 @@ public class Principal extends javax.swing.JFrame {
 
     private List<TipoContacto> listaContacto;
     private List<Contacto> listaContactos;
+    private Contacto contactoActual;
 
     /**
      * Creates new form Principal
@@ -30,13 +33,16 @@ public class Principal extends javax.swing.JFrame {
     public Principal() {
         initComponents();
         this.cargarTipoContactos();
-        this.cargarContactos();
+        //this.cargarContactos();
+        new HiloContacto(lstContactos, listaContactos).start();
+        new HiloTipoContacto(cboTipoContacto, listaContacto).start();
     }
 
     /*
     carga desde la base de datos la lista de tipos de contactos 
     que existen para la aplicacion 
      */
+    @Deprecated
     private void cargarTipoContactos() {
         listaContacto = new TipocontactoDao(ConexionBD.conectar()).consultar();
         cboTipoContacto.removeAll();
@@ -48,7 +54,7 @@ public class Principal extends javax.swing.JFrame {
         cboTipoContacto.setModel(modeloComobo);
 
     }
-
+@Deprecated
     private void cargarContactos() {
         listaContactos = new ContactoDAO(ConexionBD.conectar()).consultar();
         lstContactos.removeAll();
@@ -79,6 +85,7 @@ public class Principal extends javax.swing.JFrame {
         txtTelefono = new javax.swing.JTextField();
         cboTipoContacto = new javax.swing.JComboBox<>();
         btnGuardar = new javax.swing.JButton();
+        btnEliminar = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         lstContactos = new javax.swing.JList<>();
 
@@ -114,6 +121,8 @@ public class Principal extends javax.swing.JFrame {
             }
         });
 
+        btnEliminar.setText("Eliminar");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -137,6 +146,8 @@ public class Principal extends javax.swing.JFrame {
                             .addComponent(TxtCorreo)))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(btnEliminar)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnGuardar))))
         );
         jPanel1Layout.setVerticalGroup(
@@ -159,7 +170,9 @@ public class Principal extends javax.swing.JFrame {
                     .addComponent(jLabel4)
                     .addComponent(cboTipoContacto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnGuardar)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnGuardar)
+                    .addComponent(btnEliminar))
                 .addContainerGap(132, Short.MAX_VALUE))
         );
 
@@ -169,6 +182,11 @@ public class Principal extends javax.swing.JFrame {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
+        });
+        lstContactos.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                lstContactosValueChanged(evt);
+            }
         });
         jScrollPane1.setViewportView(lstContactos);
 
@@ -218,6 +236,15 @@ public class Principal extends javax.swing.JFrame {
         this.cargarContactos();
     }//GEN-LAST:event_btnGuardarActionPerformed
 
+    private void lstContactosValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstContactosValueChanged
+       long id=listaContactos.get(lstContactos.getSelectedIndex()).getIdContacto();
+        contactoActual=new ContactoDAO(ConexionBD.conectar()).consultar(id);
+        txtNombre.setText(contactoActual.getNombre());
+        TxtCorreo.setText(contactoActual.getCorreo());
+        txtTelefono.setText(contactoActual.getTelefono());
+        cboTipoContacto.setSelectedIndex(Integer.parseInt(contactoActual.getIdTipoContacto()+""));
+    }//GEN-LAST:event_lstContactosValueChanged
+
     /**
      * @param args the command line arguments
      */
@@ -255,6 +282,7 @@ public class Principal extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField TxtCorreo;
+    private javax.swing.JButton btnEliminar;
     private javax.swing.JButton btnGuardar;
     private javax.swing.JComboBox<String> cboTipoContacto;
     private javax.swing.JLabel jLabel1;
